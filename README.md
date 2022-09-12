@@ -5,9 +5,7 @@
 <img src="wildflower_cat.jpg" alt="kitten trying to eat some some flowers that look suspicously like asterisks" width="50%" />
 
 wildflower is a Rust library that performs [wildcard matching](https://en.wikipedia.org/wiki/Matching_wildcards) against strings.
-It's fast, ergonomic, and zero-copy.
-
-It currently depends only on the standard library, though `no_std` is a planned feature.
+It's fast, ergonomic, zero-copy, and works on `no_std`.
 
 ## Usage
 
