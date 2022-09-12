@@ -4,7 +4,7 @@
 [![crates.io](https://img.shields.io/crates/v/wildflower)](https://crates.io/crates/wildflower)
 [![docs.rs](https://img.shields.io/docsrs/wildflower)](https://docs.rs/wildflower/latest/wildflower/)
 
-![kitten trying to eat some some flowers that look suspicously like asterisks](wildflower_cat.jpg)
+![(kitten trying to eat some some flowers that look suspicously like asterisks)](wildflower_cat.jpg)
 
 wildflower is a Rust library that performs [wildcard matching](https://en.wikipedia.org/wiki/Matching_wildcards) against strings.
 It's fast, ergonomic, zero-copy, and works on `no_std`.
