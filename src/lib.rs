@@ -1,4 +1,13 @@
 #![doc = include_str!("../README.md")]
+#![cfg_attr(not(feature = "std"), no_std)]
+
+#[cfg(not(std))]
+extern crate alloc;
+
+#[cfg(not(std))]
+use alloc::vec;
+#[cfg(not(std))]
+use alloc::vec::Vec;
 
 /// A wildcard pattern to be matched against strings.
 ///

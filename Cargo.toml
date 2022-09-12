@@ -10,3 +10,9 @@ keywords = ["wildcards"]
 categories = ["algorithms", "text-processing"]
 
 [dependencies]
+
+[features]
+default = ["std"]
+
+std = []
+alloc = []
