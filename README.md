@@ -1,6 +1,8 @@
 # wildflower
 
 [![workflow status](https://github.com/cassaundra/wildflower/actions/workflows/main.yml/badge.svg)](https://github.com/cassaundra/wildflower/actions)
+[![crates.io](https://img.shields.io/crates/v/wildflower)](https://crates.io/crates/wildflower)
+[![docs.rs](https://img.shields.io/docsrs/wildflower)](https://docs.rs/wildflower/latest/wildflower/)
 
 <img src="wildflower_cat.jpg" alt="kitten trying to eat some some flowers that look suspicously like asterisks" width="50%" />
 
