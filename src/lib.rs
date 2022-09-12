@@ -47,31 +47,34 @@ impl<'a> Pattern<'a> {
 
                     slice_start += value.len();
                 }
-                SingleWildcard(count) => {
-                    // take the last char and calculate the next index
-                    if let Some((idx, c)) = slice.char_indices().nth(*count - 1) {
-                        slice_start += idx + c.len_utf8();
-                    } else {
-                        return false;
-                    }
-                }
-                ManyWildcard => {
-                    // figure out what needs to be done after this wildcard
-                    match elems.next() {
-                        // substring: consume until substring is found
-                        Some(Substring(s)) => {
-                            if let Some(idx) = slice.find(s) {
-                                slice_start += idx + s.len();
-                            } else {
-                                return false;
-                            }
+                Wildcard(wc) => {
+                    if wc.minimum > 0 {
+                        // try to take the minimum
+                        if let Some((idx, c)) = slice.char_indices().nth(wc.minimum - 1) {
+                            slice_start += idx + c.len_utf8();
+                        } else {
+                            return false;
                         }
+                    }
 
-                        // end of pattern: implicitly consume the rest of string
-                        None => return true,
+                    if wc.is_many {
+                        // look ahead
+                        match elems.next() {
+                            // substring: consume until substring is found
+                            Some(Substring(s)) => {
+                                if let Some(idx) = slice.find(s) {
+                                    slice_start += idx + s.len();
+                                } else {
+                                    return false;
+                                }
+                            }
 
-                        // per the optimization rules, no wildcards should follow
-                        _ => unreachable!("invalid pattern"),
+                            // end of pattern: implicitly consume the rest of string
+                            None => return true,
+
+                            // per the optimization rules, no wildcards should follow
+                            _ => unreachable!("invalid pattern"),
+                        }
                     }
                 }
             }
@@ -93,11 +96,26 @@ pub const WILDCARD_MANY_CHAR: char = '*';
 
 // TODO better encode optimization rules into types?
 
-#[derive(Debug)]
 enum PatternElement<'a> {
     Substring(&'a str),
-    SingleWildcard(usize),
-    ManyWildcard,
+    Wildcard(Wildcard),
+}
+
+#[derive(Copy, Clone, Default)]
+struct Wildcard {
+    minimum: usize,
+    is_many: bool,
+}
+
+impl Wildcard {
+    pub fn add(mut self, is_many: bool) -> Wildcard {
+        if is_many {
+            self.is_many = true;
+        } else {
+            self.minimum += 1;
+        }
+        self
+    }
 }
 
 struct Compiler<'a> {
@@ -141,50 +159,22 @@ impl<'a> Compiler<'a> {
     ///
     /// 4. Adjacent single wildcards are merged together.
     pub fn compile(mut self) -> Pattern<'a> {
-        use PatternElement::*;
-
         for c in self.source.chars() {
             match c {
                 ESCAPE_CHAR if !self.escape => {
                     self.flush();
                     self.reset_after(ESCAPE_CHAR);
-
                     self.escape = true;
                 }
                 WILDCARD_SINGLE_CHAR if !self.escape => {
                     self.flush();
                     self.reset_after(WILDCARD_SINGLE_CHAR);
-
-                    // optimizations:
-                    // 1. flatten repeated single wildcards
-                    // 2. ensure that many wildcards are after single wildcards
-                    if let Some(SingleWildcard(count)) = self.elements.last_mut() {
-                        *count += 1;
-                    } else if let Some(ManyWildcard) = self.elements.last() {
-                        // try and update the count of a single wildcard before the many wildcard
-                        if self.elements.len() > 1 {
-                            let len = self.elements.len();
-                            if let SingleWildcard(count) = &mut self.elements[len - 2] {
-                                *count += 1;
-                                continue;
-                            }
-                        }
-
-                        // otherwise, just insert a new one
-                        self.elements
-                            .insert(self.elements.len() - 1, SingleWildcard(1));
-                    } else {
-                        self.elements.push(SingleWildcard(1));
-                    }
+                    self.push_wildcard(false);
                 }
                 WILDCARD_MANY_CHAR if !self.escape => {
                     self.flush();
                     self.reset_after(WILDCARD_MANY_CHAR);
-
-                    // optimization: flatten repeated many wildcards
-                    if !matches!(self.elements.last(), Some(ManyWildcard)) {
-                        self.elements.push(ManyWildcard);
-                    }
+                    self.push_wildcard(true);
                 }
                 _ => {
                     self.slice_end += c.len_utf8();
@@ -201,10 +191,10 @@ impl<'a> Compiler<'a> {
     }
 
     fn flush(&mut self) {
-        // flush only if slice is non-empty
         if self.slice_start != self.slice_end {
-            let slice = &self.source[self.slice_start..self.slice_end];
-            self.elements.push(PatternElement::Substring(slice));
+            self.elements.push(PatternElement::Substring(
+                &self.source[self.slice_start..self.slice_end],
+            ));
         }
 
         self.slice_start = self.slice_end;
@@ -213,5 +203,14 @@ impl<'a> Compiler<'a> {
     fn reset_after(&mut self, c: char) {
         self.slice_start = self.slice_end + c.len_utf8();
         self.slice_end = self.slice_start;
+    }
+
+    fn push_wildcard(&mut self, is_many: bool) {
+        if let Some(PatternElement::Wildcard(wildcard)) = self.elements.last_mut() {
+            *wildcard = wildcard.add(is_many);
+        } else {
+            let wildcard = Wildcard::default().add(is_many);
+            self.elements.push(PatternElement::Wildcard(wildcard));
+        }
     }
 }
