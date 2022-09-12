@@ -94,8 +94,6 @@ pub const WILDCARD_SINGLE_CHAR: char = '?';
 /// The *many* wildcard character, `*`.
 pub const WILDCARD_MANY_CHAR: char = '*';
 
-// TODO better encode optimization rules into types?
-
 enum PatternElement<'a> {
     Substring(&'a str),
     Wildcard(Wildcard),
@@ -141,23 +139,6 @@ impl<'a> Compiler<'a> {
     /// returning a list of the optimized pattern's constituent elements.
     ///
     /// This function is infallible.
-    ///
-    /// ## Optimization
-    ///
-    /// The optimization function is not bijective---each possible source string
-    /// has a corresponding output which this functions deems its optimized
-    /// form, but multiple source strings may share this same optimized
-    /// form.
-    ///
-    /// This following optimizations are made (in this order):
-    ///
-    /// 1. Substrings are maximally large.
-    ///
-    /// 2. Adjacent many wildcards are merged together.
-    ///
-    /// 3. Single wildcards are rearranged to precede many wildcards.
-    ///
-    /// 4. Adjacent single wildcards are merged together.
     pub fn compile(mut self) -> Pattern<'a> {
         for c in self.source.chars() {
             match c {
@@ -190,6 +171,7 @@ impl<'a> Compiler<'a> {
         }
     }
 
+    /// Push the current substring and advance.
     fn flush(&mut self) {
         if self.slice_start != self.slice_end {
             self.elements.push(PatternElement::Substring(
@@ -200,11 +182,14 @@ impl<'a> Compiler<'a> {
         self.slice_start = self.slice_end;
     }
 
+    /// Reset the substring pointer to just after the current character.
     fn reset_after(&mut self, c: char) {
         self.slice_start = self.slice_end + c.len_utf8();
         self.slice_end = self.slice_start;
     }
 
+    /// Add a wildcard to the end of the pattern, merging it with the previous
+    /// if one exists.
     fn push_wildcard(&mut self, is_many: bool) {
         if let Some(PatternElement::Wildcard(wildcard)) = self.elements.last_mut() {
             *wildcard = wildcard.add(is_many);
