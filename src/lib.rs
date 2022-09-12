@@ -35,39 +35,36 @@ impl<'a> Pattern<'a> {
     pub fn matches(&self, string: &str) -> bool {
         use PatternElement::*;
 
-        let mut slice = string;
+        // current view of the string
+        let mut slice_start = 0;
 
-        let mut elements = self.elements.iter();
-
-        while let Some(elem) = elements.next() {
+        let mut elems = self.elements.iter();
+        while let Some(elem) = elems.next() {
+            let slice = &string[slice_start..];
             match elem {
                 Substring(value) => {
                     if !slice.starts_with(value) {
                         return false;
                     }
 
-                    slice = &slice[value.len()..];
+                    slice_start += value.len();
                 }
                 SingleWildcard(count) => {
                     // take the last char and calculate the next index
-                    if let Some((idx, value)) = slice.char_indices().nth(*count - 1) {
-                        slice = &slice[idx + value.len_utf8()..];
+                    if let Some((idx, c)) = slice.char_indices().nth(*count - 1) {
+                        slice_start += idx + c.len_utf8();
                     } else {
                         return false;
                     }
                 }
                 ManyWildcard => {
                     // figure out what needs to be done after this wildcard
-                    match elements.next() {
+                    match elems.next() {
                         // value: we consume zero or more characters until we find the next
                         // substring
-                        Some(Substring(value)) => {
-                            if let Some(index) = string.find(value) {
-                                if index + value.len() >= slice.len() {
-                                    slice = "";
-                                } else {
-                                    slice = &slice[index + value.len()..];
-                                }
+                        Some(Substring(s)) => {
+                            if let Some(idx) = slice.find(s) {
+                                slice_start += idx + s.len();
                             } else {
                                 return false;
                             }
@@ -86,7 +83,7 @@ impl<'a> Pattern<'a> {
         }
 
         // we have succeeded if we have successfully matched all characters
-        slice.is_empty()
+        slice_start == string.len()
     }
 }
 
