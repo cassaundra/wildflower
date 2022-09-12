@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+
 /// A wildcard pattern to be matched against strings.
 ///
 /// In general, instances of a pattern should be reused wherever possible to
