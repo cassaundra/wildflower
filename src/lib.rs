@@ -5,9 +5,7 @@
 extern crate alloc;
 
 #[cfg(not(std))]
-use alloc::vec;
-#[cfg(not(std))]
-use alloc::vec::Vec;
+use alloc::{vec, vec::Vec};
 
 /// A wildcard pattern to be matched against strings.
 ///
@@ -60,8 +58,7 @@ impl<'a> Pattern<'a> {
                 ManyWildcard => {
                     // figure out what needs to be done after this wildcard
                     match elems.next() {
-                        // value: we consume zero or more characters until we find the next
-                        // substring
+                        // substring: consume until substring is found
                         Some(Substring(s)) => {
                             if let Some(idx) = slice.find(s) {
                                 slice_start += idx + s.len();
@@ -70,12 +67,10 @@ impl<'a> Pattern<'a> {
                             }
                         }
 
-                        // end of pattern: we can implicitly consume the rest of string, and
-                        // therefore have finished matching
+                        // end of pattern: implicitly consume the rest of string
                         None => return true,
 
-                        // per the optimization rules, we should never find another wildcard after a
-                        // many wildcard
+                        // per the optimization rules, no wildcards should follow
                         _ => unreachable!("invalid pattern"),
                     }
                 }
@@ -206,12 +201,10 @@ impl<'a> Compiler<'a> {
     }
 
     fn flush(&mut self) {
-        use PatternElement::Substring;
-
         // flush only if slice is non-empty
         if self.slice_start != self.slice_end {
             let slice = &self.source[self.slice_start..self.slice_end];
-            self.elements.push(Substring(slice));
+            self.elements.push(PatternElement::Substring(slice));
         }
 
         self.slice_start = self.slice_end;
