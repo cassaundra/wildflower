@@ -1,6 +1,12 @@
 [package]
 name = "wildflower"
 version = "0.1.0"
+authors = ["Cassaundra Smith <cass@cassaundra.org>"]
 edition = "2021"
+description = "Wildcard matching against strings"
+repository = "https://github.com/cassaundra/wildflower/"
+license = "MIT"
+keywords = ["wildcards"]
+categories = ["algorithms", "text-processing"]
 
 [dependencies]
