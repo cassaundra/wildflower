@@ -1,11 +1,10 @@
 use wildflower::Pattern;
 
-// TODO unicode tests
-
 #[test]
 fn test_basic() {
     assert!(pattern("").matches(""));
     assert!(pattern("a").matches("a"));
+    assert!(pattern("🐈").matches("🐈"));
     assert!(pattern("abc").matches("abc"));
 
     assert!(!pattern("abc").matches("xyz"));
@@ -18,14 +17,17 @@ fn test_basic() {
 fn test_single_wildcard() {
     assert!(pattern("?").matches("a"));
     assert!(pattern("??").matches("aa"));
+    assert!(pattern("??").matches("αß"));
+    assert!(pattern("??").matches("你好"));
     assert!(pattern("a?").matches("aa"));
-    assert!(pattern("abc???").matches("abcxyz"));
+    assert!(pattern("abc???").matches("abcx🐜z"));
     assert!(pattern("a?aa").matches("abaa"));
     assert!(pattern("?a?a?").matches("baaax"));
 
     assert!(!pattern("?").matches(""));
     assert!(!pattern("?").matches("ab"));
     assert!(!pattern("??").matches("a"));
+    assert!(!pattern("??").matches("ß"));
     assert!(!pattern("a?").matches("ba"));
     assert!(!pattern("a?").matches("a"));
     assert!(!pattern("abc???").matches("abcxy"));
@@ -36,6 +38,7 @@ fn test_single_wildcard() {
 #[test]
 fn test_many_wildcard_single() {
     assert!(pattern("*").matches(""));
+    assert!(pattern("*").matches("♡"));
     assert!(pattern("*").matches("a"));
     assert!(pattern("*").matches("abcdef"));
 }
@@ -144,6 +147,15 @@ fn test_escapes() {
     assert!(pattern(r"h?\?").matches("hi?"));
     assert!(pattern(r"\??????").matches("? okay"));
     assert!(pattern(r"\**").matches("*.*"))
+}
+
+#[test]
+fn test_whitespace() {
+    assert!(pattern("\n").matches("\n"));
+    assert!(pattern("?").matches("\n"));
+    assert!(pattern("\t*\n").matches("\t\t\n"));
+    assert!(!pattern(" ").matches("\n"));
+    assert!(!pattern(" ").matches("\t"));
 }
 
 fn pattern(pattern: &str) -> Pattern<'_> {
