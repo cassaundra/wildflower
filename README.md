@@ -1,5 +1,7 @@
 # wildflower
 
+[![workflow status](https://github.com/cassaundra/wildflower/actions/workflows/main.yml/badge.svg)](https://github.com/cassaundra/wildflower/actions)
+
 <img src="wildflower_cat.jpg" alt="kitten trying to eat some some flowers that look suspicously like asterisks" width="50%" />
 
 wildflower is a Rust library that performs [wildcard matching](https://en.wikipedia.org/wiki/Matching_wildcards) against strings.
