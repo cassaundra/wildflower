@@ -38,7 +38,12 @@ impl<'a> Pattern<'a> {
 
         let mut elems = self.elements.iter();
         while let Some(elem) = elems.next() {
-            let slice = &string[slice_start..];
+            let slice = if slice_start < string.len() {
+                &string[slice_start..]
+            } else {
+                ""
+            };
+
             match elem {
                 Substring(value) => {
                     if !slice.starts_with(value) {
@@ -173,7 +178,7 @@ impl<'a> Compiler<'a> {
 
     /// Push the current substring and advance.
     fn flush(&mut self) {
-        if self.slice_start != self.slice_end {
+        if self.slice_start < self.slice_end {
             self.elements.push(PatternElement::Substring(
                 &self.source[self.slice_start..self.slice_end],
             ));
