@@ -7,6 +7,8 @@ fn test_basic() {
     assert!(pattern("🐈").matches("🐈"));
     assert!(pattern("abc").matches("abc"));
 
+    assert!(!pattern("a").matches(""));
+    assert!(!pattern("").matches("a"));
     assert!(!pattern("abc").matches("xyz"));
     assert!(!pattern("abc").matches("a"));
     assert!(!pattern("abc").matches("ab"));
@@ -156,6 +158,13 @@ fn test_whitespace() {
     assert!(pattern("\t*\n").matches("\t\t\n"));
     assert!(!pattern(" ").matches("\n"));
     assert!(!pattern(" ").matches("\t"));
+}
+
+#[test]
+fn test_issue_3() {
+    assert!(!pattern("??*?!?").matches("hello!"));
+    assert!(!pattern("hel*???!?**+").matches("hello!"));
+    assert!(!pattern("?*??ll*??*w\n").matches("hello!"));
 }
 
 fn pattern(pattern: &str) -> Pattern<'_> {
