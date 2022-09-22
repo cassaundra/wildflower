@@ -67,7 +67,7 @@ impl<'a> Pattern<'a> {
                         match elems.next() {
                             // substring: consume until substring is found
                             Some(Substring(s)) => {
-                                if let Some(idx) = slice.find(s) {
+                                if let Some(idx) = &string[slice_start..].find(s) {
                                     slice_start += idx + s.len();
                                 } else {
                                     return false;
