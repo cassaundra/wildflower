@@ -111,12 +111,27 @@ struct Wildcard {
 }
 
 impl Wildcard {
-    pub fn add(mut self, is_many: bool) -> Wildcard {
-        if is_many {
-            self.is_many = true;
-        } else {
-            self.minimum += 1;
+    pub fn single() -> Self {
+        Wildcard {
+            minimum: 1,
+            is_many: false,
         }
+    }
+
+    pub fn many() -> Self {
+        Wildcard {
+            minimum: 0,
+            is_many: true,
+        }
+    }
+
+    pub fn push_single(mut self) -> Self {
+        self.minimum += 1;
+        self
+    }
+
+    pub fn push_many(mut self) -> Self {
+        self.is_many = true;
         self
     }
 }
@@ -197,9 +212,17 @@ impl<'a> Compiler<'a> {
     /// if one exists.
     fn push_wildcard(&mut self, is_many: bool) {
         if let Some(PatternElement::Wildcard(wildcard)) = self.elements.last_mut() {
-            *wildcard = wildcard.add(is_many);
+            *wildcard = if is_many {
+                wildcard.push_many()
+            } else {
+                wildcard.push_single()
+            };
         } else {
-            let wildcard = Wildcard::default().add(is_many);
+            let wildcard = if is_many {
+                Wildcard::many()
+            } else {
+                Wildcard::single()
+            };
             self.elements.push(PatternElement::Wildcard(wildcard));
         }
     }
