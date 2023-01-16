@@ -136,6 +136,19 @@ impl Wildcard {
     }
 }
 
+/// A pattern "compiler" which transform a pattern string into its efficient
+/// internal representation, a [Pattern].
+///
+/// # Algorithm
+///
+/// The underlying algorithm is fairly simple:
+/// 1. Construct the longest possible substrings of non-wildcard characters.
+/// 2. Pack consecutive wildcards into "wildcard groups" which keep track of 1)
+///    the number of single wildcards (`?`) in the substring, and 2) whether or
+///    not at least one many wildcard (`*`) is present within the substring.
+///
+/// The constructed internal representation is a sequence of these substrings
+/// and wildcard groups.
 struct Compiler<'a> {
     source: &'a str,
     elements: Vec<PatternElement<'a>>,
