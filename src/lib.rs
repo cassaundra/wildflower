@@ -7,6 +7,15 @@ extern crate alloc;
 #[cfg(not(std))]
 use alloc::{vec, vec::Vec};
 
+/// The escape character, `\`.
+pub const ESCAPE_CHAR: char = '\\';
+
+/// The *single* wildcard character, `?`.
+pub const WILDCARD_SINGLE_CHAR: char = '?';
+
+/// The *many* wildcard character, `*`.
+pub const WILDCARD_MANY_CHAR: char = '*';
+
 /// A wildcard pattern to be matched against strings.
 ///
 /// In general, instances of a pattern should be reused wherever possible to
@@ -89,15 +98,6 @@ impl<'a> Pattern<'a> {
         slice_start == string.len()
     }
 }
-
-/// The escape character, `\`.
-pub const ESCAPE_CHAR: char = '\\';
-
-/// The *single* wildcard character, `?`.
-pub const WILDCARD_SINGLE_CHAR: char = '?';
-
-/// The *many* wildcard character, `*`.
-pub const WILDCARD_MANY_CHAR: char = '*';
 
 enum PatternElement<'a> {
     Substring(&'a str),
