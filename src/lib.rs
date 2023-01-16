@@ -99,6 +99,12 @@ impl<'a> Pattern<'a> {
     }
 }
 
+impl<'a> From<&'a str> for Pattern<'a> {
+    fn from(source: &'a str) -> Self {
+        Pattern::new(source)
+    }
+}
+
 enum PatternElement<'a> {
     Substring(&'a str),
     Wildcard(Wildcard),
