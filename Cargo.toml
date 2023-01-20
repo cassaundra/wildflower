@@ -1,7 +1,6 @@
 [package]
 name = "wildflower"
 version = "0.1.1"
-authors = ["Cassaundra Smith <cass@cassaundra.org>"]
 edition = "2021"
 description = "Wildcard matching against strings"
 repository = "https://github.com/cassaundra/wildflower/"
