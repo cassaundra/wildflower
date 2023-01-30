@@ -24,7 +24,8 @@ Since no internal state is maintained between matches, it is recommended that yo
 ## Alternatives
 
 [wildmatch](https://crates.io/crates/wildmatch) is the closest alternative at the time of writing.
-Unfortunately, it explicitly does not support escaped special characters, and is not particularly optimized (see [benchmarks](#benchmarking)).
+Unfortunately, it explicitly does not support escaping special characters, which I found to be a significant limitation to warrant an alternative.
+wildflower also performs certain optimizations that make it more performant when matching, in many cases by an order of magnitude (see [benchmarks](#benchmarking)).
 
 Several other crates exist for pattern matching, namely [regex](https://crates.io/crates/regex) (for regular expressions) and [glob](https://crates.io/crates/glob) (for Unix shell patterns).
 
