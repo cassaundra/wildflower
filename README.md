@@ -35,10 +35,10 @@ Using a benchmark similar to the one found in wildmatch ([source](https://github
 
 | Benchmark         | wildflower | wildmatch |      regex |     glob |
 |-------------------|-----------:|----------:|-----------:|---------:|
-| compiling/text    |     354 ns |    386 ns | 129,180 ns | 1,875 ns |
-| compiling/complex |     219 ns |     44 ns |  79,536 ns |   140 ns |
-| matching/text     |       7 ns |    531 ns |     433 ns |   797 ns |
-| matching/complex  |     132 ns |    558 ns |     407 ns | 2,193 ns |
+| compiling/text    |     362 ns |    390 ns | 131,770 ns | 2,041 ns |
+| compiling/complex |     218 ns |     47 ns |  84,236 µs |   165 ns |
+| matching/text     |       7 ns |    416 ns |     415 ns |   832 ns |
+| matching/complex  |     104 ns |    494 ns |     409 ns | 2,222 ns |
 
 In this benchmark run, wildflower is shown to be 76x and 4x as fast as wildmatch in the simple and complex case of matching respectfully.
 It could certainly stand to see performance improvements in compiling, but even in the worst case of a single-use compilation, it still outperforms wildmatch.
