@@ -15,7 +15,7 @@ The wildcard matching grammar contains the following special characters:
 
 - `?` matches a single character.
 - `*` matches zero or more characters.
-- `\` escapes these special characters.
+- `\` escapes these special characters (including itself).
 
 A pattern is constructed from a UTF-8-encoded string which may contain these special characters.
 When a pattern is created, the given source string is parsed and compiled into an optimized internal form.
@@ -24,7 +24,7 @@ Since no internal state is maintained between matches, it is recommended that yo
 ## Alternatives
 
 [wildmatch](https://crates.io/crates/wildmatch) is the closest alternative at the time of writing.
-Unfortunately, it explicitly does not support escaping special characters, which I found to be a significant limitation to warrant an alternative.
+Unfortunately, it explicitly does not support escaping special characters, which I found to be a significant enough limitation to warrant an alternative.
 wildflower also performs certain optimizations that make it more performant when matching, in many cases by an order of magnitude (see [benchmarks](#benchmarking)).
 
 Several other crates exist for pattern matching, namely [regex](https://crates.io/crates/regex) (for regular expressions) and [glob](https://crates.io/crates/glob) (for Unix shell patterns).
@@ -36,7 +36,7 @@ Using a benchmark similar to the one found in wildmatch ([source](https://github
 | Benchmark         | wildflower | wildmatch |      regex |     glob |
 |-------------------|-----------:|----------:|-----------:|---------:|
 | compiling/text    |     362 ns |    390 ns | 131,770 ns | 2,041 ns |
-| compiling/complex |     218 ns |     47 ns |  84,236 µs |   165 ns |
+| compiling/complex |     218 ns |     47 ns |  84,236 ns |   165 ns |
 | matching/text     |       7 ns |    416 ns |     415 ns |   832 ns |
 | matching/complex  |     104 ns |    494 ns |     409 ns | 2,222 ns |
 
