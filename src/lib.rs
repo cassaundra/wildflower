@@ -4,8 +4,13 @@
 #[cfg(not(std))]
 extern crate alloc;
 
+use core::ops::Deref;
+
 #[cfg(not(std))]
 use alloc::{vec, vec::Vec};
+
+use stable_deref_trait::StableDeref;
+use yoke::{Yoke, Yokeable};
 
 /// The escape character, `\`.
 pub const ESCAPE_CHAR: char = '\\';
@@ -28,14 +33,19 @@ pub const WILDCARD_MANY_CHAR: char = '*';
 /// let pattern = Pattern::new("*flow?r? it's *!");
 /// assert!(pattern.matches("wildflower: it's fast!"));
 /// ```
-pub struct Pattern<'a> {
-    elements: Vec<PatternElement<'a>>,
+pub struct Pattern<S> {
+    inner: Yoke<PatternInner<'static>, S>,
 }
 
-impl<'a> Pattern<'a> {
+impl<S> Pattern<S>
+where
+    S: StableDeref,
+    <S as Deref>::Target: 'static + AsRef<str>,
+{
     /// Create a new pattern from a source string.
-    pub fn new(source: &'a str) -> Pattern<'a> {
-        Compiler::from_source(source).compile()
+    pub fn new(source: S) -> Self {
+        let inner = Yoke::attach_to_cart(source, |s| Compiler::from_source(s.as_ref()).compile());
+        Pattern { inner }
     }
 
     /// Test whether or not this pattern matches a given string.
@@ -45,7 +55,7 @@ impl<'a> Pattern<'a> {
         // current view of the string
         let mut slice_start = 0;
 
-        let mut elems = self.elements.iter();
+        let mut elems = self.inner.get().elements.iter();
         while let Some(elem) = elems.next() {
             let slice = if slice_start < string.len() {
                 &string[slice_start..]
@@ -55,7 +65,7 @@ impl<'a> Pattern<'a> {
 
             match elem {
                 Substring(value) => {
-                    if !slice.starts_with(value) {
+                    if !slice.starts_with(&**value) {
                         return false;
                     }
 
@@ -76,7 +86,7 @@ impl<'a> Pattern<'a> {
                         match elems.next() {
                             // substring: consume until substring is found
                             Some(Substring(s)) => {
-                                if let Some(idx) = &string[slice_start..].find(s) {
+                                if let Some(idx) = &string[slice_start..].find(&**s) {
                                     slice_start += idx + s.len();
                                 } else {
                                     return false;
@@ -99,10 +109,19 @@ impl<'a> Pattern<'a> {
     }
 }
 
-impl<'a> From<&'a str> for Pattern<'a> {
-    fn from(source: &'a str) -> Self {
+impl<S> From<S> for Pattern<S>
+where
+    S: StableDeref,
+    <S as Deref>::Target: 'static + AsRef<str>,
+{
+    fn from(source: S) -> Self {
         Pattern::new(source)
     }
+}
+
+#[derive(Yokeable)]
+struct PatternInner<'a> {
+    elements: Vec<PatternElement<'a>>,
 }
 
 enum PatternElement<'a> {
@@ -164,7 +183,7 @@ struct Compiler<'a> {
 }
 
 impl<'a> Compiler<'a> {
-    pub fn from_source(source: &'a str) -> Compiler<'a> {
+    pub fn from_source(source: &'a str) -> Self {
         Compiler {
             source,
             elements: vec![],
@@ -178,7 +197,7 @@ impl<'a> Compiler<'a> {
     /// returning a list of the optimized pattern's constituent elements.
     ///
     /// This function is infallible.
-    pub fn compile(mut self) -> Pattern<'a> {
+    pub fn compile(mut self) -> PatternInner<'a> {
         for c in self.source.chars() {
             match c {
                 ESCAPE_CHAR if !self.escape => {
@@ -205,7 +224,7 @@ impl<'a> Compiler<'a> {
 
         self.flush();
 
-        Pattern {
+        PatternInner {
             elements: self.elements,
         }
     }

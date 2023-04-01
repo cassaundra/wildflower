@@ -172,6 +172,6 @@ fn test_issue_4() {
     assert!(!pattern("??*``*").matches(r"``\ȣ?"));
 }
 
-fn pattern(pattern: &str) -> Pattern<'_> {
+fn pattern(pattern: &str) -> Pattern<&'_ str> {
     Pattern::new(pattern)
 }

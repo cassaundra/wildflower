@@ -9,6 +9,8 @@ keywords = ["wildcards", "no-std"]
 categories = ["algorithms", "text-processing"]
 
 [dependencies]
+stable_deref_trait = "1.2.0"
+yoke = { version = "0.7.0", features = ["derive"] }
 
 [features]
 default = ["std"]
