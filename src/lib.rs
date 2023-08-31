@@ -30,7 +30,7 @@ pub const WILDCARD_MANY_CHAR: char = '*';
 ///
 /// ```
 /// # use wildflower::Pattern;
-/// let pattern = Pattern::new("*flow?r? it's *!");
+/// let pattern = Pattern::new(r"*flow?r? it's *!");
 /// assert!(pattern.matches("wildflower: it's fast!"));
 /// ```
 pub struct Pattern<S> {
