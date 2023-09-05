@@ -33,6 +33,7 @@ pub const WILDCARD_MANY_CHAR: char = '*';
 /// let pattern = Pattern::new(r"*flow?r? it's *!");
 /// assert!(pattern.matches("wildflower: it's fast!"));
 /// ```
+#[derive(Debug)]
 pub struct Pattern<S> {
     inner: Yoke<PatternInner<'static>, S>,
 }
@@ -119,17 +120,18 @@ where
     }
 }
 
-#[derive(Yokeable)]
+#[derive(Yokeable, Debug)]
 struct PatternInner<'a> {
     elements: Vec<PatternElement<'a>>,
 }
 
+#[derive(Debug)]
 enum PatternElement<'a> {
     Substring(&'a str),
     Wildcard(Wildcard),
 }
 
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Default, Debug)]
 struct Wildcard {
     minimum: usize,
     is_many: bool,
