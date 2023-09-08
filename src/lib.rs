@@ -10,7 +10,7 @@ use core::ops::Deref;
 #[cfg(not(std))]
 use alloc::{vec, vec::Vec};
 use core::fmt;
-use core::fmt::Formatter;
+use core::fmt::{Display, Formatter};
 
 use stable_deref_trait::StableDeref;
 use yoke::{Yoke, Yokeable};
@@ -110,39 +110,43 @@ where
         // we have succeeded if we have successfully matched all characters
         slice_start == string.len()
     }
-
 }
 
-impl<S> Pattern<S> {
-    /// Converts the pattern to a string equivalent to the pattern, but possibly not the original
-    pub fn to_string(&self) -> String {
-        let mut ret = String::new();
-
+impl<S> Display for Pattern<S> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         for p in self.inner.get().elements.iter() {
             match p {
                 PatternElement::Substring(ss) => {
                     for c in ss.chars() {
                         match c {
-                            ESCAPE_CHAR => { ret.push_str(r"\\"); }
-                            WILDCARD_SINGLE_CHAR => { ret.push_str(r"\?"); }
-                            WILDCARD_MANY_CHAR => { ret.push_str(r"\*"); }
-                            _ => { ret.push(c); }
+                            ESCAPE_CHAR => {
+                                write!(f, r"\\")?;
+                            }
+                            WILDCARD_SINGLE_CHAR => {
+                                write!(f, r"\?")?;
+                            }
+                            WILDCARD_MANY_CHAR => {
+                                write!(f, r"\*")?;
+                            }
+                            _ => {
+                                write!(f, "{}", c)?;
+                            }
                         }
                     }
                 }
                 PatternElement::Wildcard(wc) => {
                     if wc.is_many {
-                        ret.push('*');
+                        write!(f, "*")?;
                     } else {
                         for _ in 0..wc.minimum {
-                            ret.push('?');
+                            write!(f, "?")?;
                         }
                     }
                 }
             }
         }
 
-        ret
+        Ok(())
     }
 }
 
@@ -303,34 +307,32 @@ impl<'a> Compiler<'a> {
     }
 }
 
-
 #[cfg(feature = "serde")]
 use serde::de::{Deserialize, Deserializer, Error as DeError, Visitor};
 #[cfg(feature = "serde")]
 use serde::ser::{Serialize, Serializer};
 
-
 #[cfg(feature = "serde")]
 impl<D> Serialize for Pattern<D> {
     #[inline]
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: Serializer, {
+    where
+        S: Serializer,
+    {
         serializer.serialize_str(self.to_string().as_str())
     }
 }
 
 #[cfg(feature = "serde")]
-impl<'de> Deserialize<'de> for Pattern<String>
-{
+impl<'de> Deserialize<'de> for Pattern<String> {
     #[inline]
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: Deserializer<'de>, {
+    where
+        D: Deserializer<'de>,
+    {
         struct PatternVisitor;
 
-        impl<'de> Visitor<'de> for PatternVisitor
-        {
+        impl<'de> Visitor<'de> for PatternVisitor {
             type Value = Pattern<String>;
 
             #[inline]
@@ -340,8 +342,9 @@ impl<'de> Deserialize<'de> for Pattern<String>
 
             #[inline]
             fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
-                where
-                    E: DeError, {
+            where
+                E: DeError,
+            {
                 Ok(Pattern::from(v.to_string()))
             }
         }

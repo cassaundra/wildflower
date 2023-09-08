@@ -232,4 +232,3 @@ fn test_issue_4() {
 fn pattern(pattern: &str) -> Pattern<&'_ str> {
     Pattern::new(pattern)
 }
-
