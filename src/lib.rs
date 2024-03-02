@@ -119,17 +119,25 @@ where
     }
 }
 
-#[derive(Yokeable)]
+impl<S> PartialEq for Pattern<S> {
+    fn eq(&self, other: &Self) -> bool {
+        self.inner.get() == other.inner.get()
+    }
+}
+impl<S> Eq for Pattern<S> {}
+
+#[derive(Yokeable, PartialEq, Eq)]
 struct PatternInner<'a> {
     elements: Vec<PatternElement<'a>>,
 }
 
+#[derive(PartialEq, Eq)]
 enum PatternElement<'a> {
     Substring(&'a str),
     Wildcard(Wildcard),
 }
 
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Default, Eq, PartialEq)]
 struct Wildcard {
     minimum: usize,
     is_many: bool,
