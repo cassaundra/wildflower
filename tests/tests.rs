@@ -161,6 +161,13 @@ fn test_whitespace() {
 }
 
 #[test]
+fn test_eq() {
+    assert!(pattern("??*ab") == pattern("??*ab"));
+    assert!(pattern("??*ab") == pattern("?*?ab"));
+    assert!(pattern("??*abc") != pattern("?*??abc"));
+}
+
+#[test]
 fn test_issue_3() {
     assert!(!pattern("??*?!?").matches("hello!"));
     assert!(!pattern("hel*???!?**+").matches("hello!"));
