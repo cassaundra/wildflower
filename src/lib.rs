@@ -3,11 +3,14 @@
 
 #[cfg(not(std))]
 extern crate alloc;
+extern crate core;
 
 use core::ops::Deref;
 
 #[cfg(not(std))]
 use alloc::{vec, vec::Vec};
+use core::fmt;
+use core::fmt::{Display, Formatter};
 
 use stable_deref_trait::StableDeref;
 use yoke::{Yoke, Yokeable};
@@ -106,6 +109,44 @@ where
 
         // we have succeeded if we have successfully matched all characters
         slice_start == string.len()
+    }
+}
+
+impl<S> Display for Pattern<S> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        for p in self.inner.get().elements.iter() {
+            match p {
+                PatternElement::Substring(ss) => {
+                    for c in ss.chars() {
+                        match c {
+                            ESCAPE_CHAR => {
+                                write!(f, r"\\")?;
+                            }
+                            WILDCARD_SINGLE_CHAR => {
+                                write!(f, r"\?")?;
+                            }
+                            WILDCARD_MANY_CHAR => {
+                                write!(f, r"\*")?;
+                            }
+                            _ => {
+                                write!(f, "{}", c)?;
+                            }
+                        }
+                    }
+                }
+                PatternElement::Wildcard(wc) => {
+                    if wc.is_many {
+                        write!(f, "*")?;
+                    } else {
+                        for _ in 0..wc.minimum {
+                            write!(f, "?")?;
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(())
     }
 }
 
@@ -271,5 +312,51 @@ impl<'a> Compiler<'a> {
             };
             self.elements.push(PatternElement::Wildcard(wildcard));
         }
+    }
+}
+
+#[cfg(feature = "serde")]
+use serde::de::{Deserialize, Deserializer, Error as DeError, Visitor};
+#[cfg(feature = "serde")]
+use serde::ser::{Serialize, Serializer};
+
+#[cfg(feature = "serde")]
+impl<D> Serialize for Pattern<D> {
+    #[inline]
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(self.to_string().as_str())
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> Deserialize<'de> for Pattern<String> {
+    #[inline]
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct PatternVisitor;
+
+        impl<'de> Visitor<'de> for PatternVisitor {
+            type Value = Pattern<String>;
+
+            #[inline]
+            fn expecting(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+                f.write_str("a CIDR string")
+            }
+
+            #[inline]
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+            where
+                E: DeError,
+            {
+                Ok(Pattern::from(v.to_string()))
+            }
+        }
+
+        deserializer.deserialize_str(PatternVisitor)
     }
 }
